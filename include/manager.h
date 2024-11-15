@@ -35,13 +35,16 @@
 
 class Manager {
 
-public:
-	Manager();
-	bool login(std::string user, std::string pass);
+  public:
+   Manager();
+	~Manager();
+   // Funcionalidades Usuario
+   bool login(std::string user, std::string pass);
 	bool agregarUsuario(Usuario usuario);
 	Usuario* listaUsuarios();
 	int cantidadUsuarios();
 	std::string getNombreUsuario();
+  int buscarUsuario(std::string nombreUsuario);
 	int buscarUsuario(std::string nombreUsuario, bool buscarEnCache);
 	Usuario leerUsuario(int posicion);
 	bool reescribirUsuario(Usuario usuario, int posicion); 
@@ -51,7 +54,28 @@ public:
 	void actualizarCacheUsuarios();
 	int buscar(std::string busqueda, int tipoDeBusqueda);
 	Usuario* getCacheListadoUsuarios(); 
-	~Manager();
+  bool esAdmin();
+   bool esComprador();
+   bool esVendedor();
+
+  //funcionalidades insumos
+   int buscarInsumo(std::string codigo);
+   int agregarInsumo(Recurso insumo);
+   bool borrarInsumo(int pos);
+   bool estaBorrado(int pos);
+   bool modificarInsumo(Recurso insumo, int pos);
+   bool modificarStockInsumo(int stock, int pos);
+
+   Recurso getRecurso(int pos);
+   bool listaRecursos(int pos,int cantidad,bool isProducto,bool borrado,Recurso*& vector,int& vectorSize);
+   //funcionalidades productos
+   int buscarProducto(std::string codigo);
+   int agregarProducto(Recurso producto);
+   bool borrarProducto(int pos);
+   bool modificarStockRecurso(int stock, int pos);
+   bool getComposicionProducto(int pos,Recurso*& vector,int& composicionSize,std::string codigo);
+   bool setComposicionProducto(std::string idProducto, std::string idInsumo, int cantidad);
+ 
 
 private:
 	ArchivoCliente archivoCliente;

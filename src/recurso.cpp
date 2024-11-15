@@ -15,7 +15,7 @@ Recurso::Recurso(std::string codigo, std::string descripcion,
    strcpy(this->_codigo,codigo.c_str());
    strcpy(this->_descripcion,descripcion.c_str());
    strcpy(this->_tipoMedicion,tipoMedicion.c_str());
-   this->_stock = stock;
+   this->_stock = 0;
    this->_futuro = futuro;
    this->_origenInterno = origenInterno;
 }
@@ -60,10 +60,23 @@ void Recurso::setFuturo(int futuro){
    this->_futuro = futuro;
 }
 
-bool Recurso::getOrigen(){
+bool Recurso::isInsumo(){
+   return !(this->_origenInterno);
+}
+bool Recurso::isProducto(){
    return this->_origenInterno;
 }
 
 void Recurso::setOrigen(bool origen){
    this->_origenInterno = origen;
+}
+
+//funcionalidades insumo
+
+bool Recurso::getEstaBorrado(){
+   return this->_estaBorrado;
+}
+
+void Recurso::setEstaBorrado(bool borrado){
+   this->_estaBorrado = borrado;
 }
