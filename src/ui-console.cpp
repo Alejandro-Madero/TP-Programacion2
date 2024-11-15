@@ -621,23 +621,43 @@ int UiConsole::mostrarMenuModificacionUsuario() {
     std::cout << RESET << "0. " << SUBRAYADO << BOLD << "Volver al menú principal" << RESET << std::endl << std::endl;
     std::cout << "Opción elegida: ";
 
-    std::string op;
-    std::getline(std::cin, op);
-    if (op == "0") {
-        return 0;
-    }
-    else if (op == "1") {
+    std::string opcion;
+    std::getline(std::cin, opcion);
+   
+    while (true) {    
+    if (opcion == "1") {
         return 1;
     }
-    else if (op == "2") {
+    else if (opcion == "2") {
         return 2;
     }
+    else if (opcion == "3") {
+        return 3;
+    }
+    else if (opcion == "4") {
+        return 4;
+    }
+    else if (opcion == "5") {
+        return 5;
+    }
+    else if (opcion == "6") {
+        return 6;
+    }
+    else if (opcion == "7") {
+        return 7;
+    }
+    else if (opcion == "0") {
+        return 0;
+    }
     else {
-        return -1;
+        std::cout << ROJO << "La opción seleccionada es incorrecta. Ingrese nuevamente una opción." << RESET << std::endl;
+        std::cout << "Opción elegida: ";
+        std::getline(std::cin, opcion);
     }
 
-
-    return 1; 
+    }
+    return -1;
+   
 }
 
 

@@ -286,7 +286,22 @@ void Menu::menuUsuarios(Manager& manager, UiConsole& ui) {
 				int opcion = ui.mostrarMenuModificacionUsuario(); 
 
 				switch (opcion) {
-				case 1:
+				case 1: {
+					std::string nuevoNombreUsuario; 
+					std::cout << "Ingrese el nuevo nombre de usuario: ";
+					std::getline(std::cin, nuevoNombreUsuario); 
+					int existeUsuario = manager.buscarUsuario(nuevoNombreUsuario, true);
+
+					if (existeUsuario >= 0) {
+						std::cout << UiConsole::ROJO << "El nombre de usuario" << UiConsole::VERDE << "'" << nuevoNombreUsuario << "'" << UiConsole::ROJO << " ya fue utilizado. Ingrese nuevamente un nombre de usuario." << UiConsole::RESET << std::endl;
+					}
+					else {
+						usuario.setNombreUsuario(nuevoNombreUsuario);
+						manager.reescribirUsuario(usuario, posicionUsuario);
+						manager.actualizarCacheUsuarios();
+						return; 
+					}
+				}
 				case 2:
 				case 3:
 				case 4: 
