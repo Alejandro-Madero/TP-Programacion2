@@ -46,6 +46,7 @@ class UiConsole {
    void mostrarRoles();
    void mostrarRoles(std::string& nombreUsuario);
    void listarUsuario(std::string nombreUsuario,char tipoUsuario, std::string email, int telefono);
+   int menuEditarMiPerfil(Usuario& usuarioLoggeado);
    void tipoUsuario(std::string tipoUsuario);
 //funcionalidades insumo-producto  (le mandaba Leontief jaja)
    std::string pedirCodigo();

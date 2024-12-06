@@ -1,5 +1,8 @@
 #include "../include/persona.h"
+#include "../include/ui-console.h"
+#include "../include/manager.h"
 #include <cstring>
+#include <regex>
 
 Persona::Persona() {
    this->_id = 0;
@@ -74,3 +77,84 @@ void Persona::setEmail(std::string email) {
 int Persona::getTelefono() {
     return this->_telefono; 
 }
+
+
+bool Persona::validarNombreCompleto(std::string nombreCompleto) {
+    std::regex regex("[a-zA-Z]{2,} [a-zA-Z]{2,}");
+    return std::regex_match(nombreCompleto, regex);
+}
+
+bool Persona::validarEmail(std::string email) {
+    std::regex regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    return std::regex_match(email, regex);
+}
+
+bool Persona::validarDireccion(std::string direccion) {
+    return direccion.length() >= 4;
+}
+
+bool Persona::validarTelefono(std::string telefono) {
+    if (telefono.size() < 8) return false;
+
+    return std::all_of(telefono.begin(), telefono.end(), ::isdigit);
+}
+
+bool Persona::actualizarNombre() {
+    //NOMBRE:
+    std::string nombre;
+    std::cout << "Ingrese el nombre o 'Q' para salir de este menú: ";
+    std::getline(std::cin, nombre);
+    //Validación del nombre completo: 
+    bool nombreEsCorrecto = Persona::validarNombreCompleto(nombre);
+
+    if (nombre == "q" || nombre == "Q") return false; 
+
+    while (!nombreEsCorrecto) {
+        std::cout << UiConsole::ROJO << "El valor ingresado no es un nombre correcto. Formato correcto: 'Nombre Apellido'. Ingreselo nuevamente." << UiConsole::RESET << std::endl;
+        std::cout << "Nombre completo:";
+        std::getline(std::cin, nombre);
+        nombreEsCorrecto = Persona::validarNombreCompleto(nombre);
+    }
+
+    this->setNombre(nombre); 
+
+    return true; 
+};
+
+
+
+bool Persona::actualizarEmail(Manager& manager) {
+
+    //EMAIL:
+    std::string email; 
+    std::cout << "Ingrese el nuevo email o 'Q' para salir de este menu: ";
+    std::getline(std::cin, email);
+
+    if (email == "q" || email == "Q") return false; 
+
+    //Validacion del formato del email: 
+    bool formatoCorrectoEmail = Persona::validarEmail(email);
+
+    while (!formatoCorrectoEmail) {
+        std::cout << UiConsole::ROJO << "El valor ingresado no tiene un formato correcto (ejemplo: mimail@mailito.com). Ingrese nuevamente un valor." <<UiConsole::RESET << std::endl;
+        std::cout << "Email: ";
+        std::getline(std::cin, email);
+        formatoCorrectoEmail = Persona::validarEmail(email);
+    }
+    int mailExiste = manager.buscarEmail(email, true);
+
+    // Validación de la existencia del email en la base de datos:
+    while (mailExiste >= 0)
+    {
+        std::cout << UiConsole::ROJO << "El mail ingresado " << UiConsole::VERDE << "'" << email << "'" << UiConsole::ROJO
+            << " ya está registrado para otro usuario. Ingrese otro email." << UiConsole::RESET << std::endl;
+        std::cout << "Email: ";
+        std::getline(std::cin, email);
+        mailExiste = manager.buscarEmail(email, true);
+    }
+
+    this->setEmail(email); 
+
+    return true; 
+};
+void actualizarDireccion();

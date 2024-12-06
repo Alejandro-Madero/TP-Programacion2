@@ -3,7 +3,7 @@
 #include <direct.h>
 
 Manager::Manager() {
-   this->_cacheListadoUsuarios = nullptr;
+   this->_cacheListadoUsuarios = nullptr;  
    this->archivoCliente = ArchivoCliente();
    this->archivoComposicionFactura = ArchivoComposicionFactura();
    this->archivoComposicionMovimientos = ArchivoComposicionMovimientos();
@@ -46,15 +46,19 @@ bool Manager::login(std::string user, std::string pass) {
 
 	Usuario usuario = this->archivoUsuario.Leer(posicionUsuario);
 
+    bool usuarioActivo = usuario.getEstadoUsuario();
+
+    if (!usuarioActivo) {
+        return false; 
+    }
+
 	if (usuario.getPassword() != pass) {
 		return false;
 	}
 
-	this->_usuarioLoggeado = usuario;
+	this->setUsarioLoggeado(usuario);
 	this->_nombreUsuario = usuario.getNombreUsuario();
 	this->_rolUsuario = usuario.getRol();
-	this->_tienePrivilegios = this->_rolUsuario == 'a' || this->_rolUsuario == 'A';
-
 	return true;
 }
 
@@ -98,16 +102,12 @@ bool Manager::agregarUsuario(Usuario usuario) {
 	return this->archivoUsuario.Guardar(usuario);
 }
 
-Usuario* Manager::listaUsuarios() {
+Usuario* Manager::getListaUsuarios() {
 	return this->archivoUsuario.LeerTodos();
 }
 
 int Manager::cantidadUsuarios() {
 	return this->archivoUsuario.getCantidadRegistros();
-}
-
-bool Manager::getPrivilegios() {
-	return this->_tienePrivilegios;
 }
 
 Manager::~Manager() {
@@ -117,7 +117,7 @@ Manager::~Manager() {
 }
 
 void Manager::actualizarCacheUsuarios() {
-	this->_cacheListadoUsuarios = this->listaUsuarios();
+	this->_cacheListadoUsuarios = this->getListaUsuarios();
 }
 
 Usuario* Manager::getCacheListadoUsuarios() {
@@ -433,4 +433,13 @@ bool Manager::setComposicionProducto(std::string idProducto, std::string idInsum
       return this->archivoComposicionProducto.Guardar(composicion);
    }
    return false;
+}
+
+
+Usuario Manager::getUsuarioLoggeado() {
+    return this->_usuarioLoggeado; 
+}
+
+void Manager::setUsarioLoggeado(Usuario usuario) {
+    this->_usuarioLoggeado = usuario; 
 }

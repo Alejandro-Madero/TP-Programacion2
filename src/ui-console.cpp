@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include<algorithm>
+#include <cctype>
 
 #include "../include/manager.h"
 
@@ -50,7 +52,7 @@ void UiConsole::pausa()
 
 void UiConsole::opcionIncorrecta()
 {
-   std::cout << "Opción incorrecta. Elija nuevamente una opción." << std::endl;
+   std::cout << ROJO << "Opción incorrecta. Ingrese nuevamente una opción." << RESET << std::endl;
    this->pausa();
 }
 
@@ -128,6 +130,15 @@ const char *MENU_AGREGAR_USUARIO = R"(
 ║                                          ║
 ╚══════════════════════════════════════════╝
 )";
+
+const char* MENU_EDITAR_USUARIO = R"(
+╔══════════════════════════════════════════╗
+║                                          ║
+║             EDITAR USUARIO               ║
+║                                          ║
+╚══════════════════════════════════════════╝
+)";
+
 
 const char *MENU_ESTATISTICAS = R"(
 ╔══════════════════════════════════════════╗
@@ -561,49 +572,39 @@ int UiConsole::mostrarMenuVentas()
 
 int UiConsole::mostrarMenuUsuarios()
 {
-   this->limpiarConsola();
-   std::cout << BOLD << "Usuario: " << VERDE << _nombreUsuario << RESET;
-   std::cout << MENU_GESTION_USUARIOS << std::endl;
+    this->limpiarConsola();
+    std::cout << BOLD << "Usuario: " << VERDE << _nombreUsuario << RESET;
+    std::cout << MENU_GESTION_USUARIOS << std::endl;
 
-   std::cout << ROJO << "1. " << RESET << SUBRAYADO << BOLD << "Agregar usuario" << std::endl;
-   std::cout << RESET << ROJO << "2. " << RESET << SUBRAYADO << BOLD << "Modificar usuario" << std::endl;
-   std::cout << RESET << ROJO << "3. " << RESET << SUBRAYADO << BOLD << "Eliminar usuario" << std::endl;
-   std::cout << RESET << ROJO << "4. " << RESET << SUBRAYADO << BOLD << "Modificar contraseña root" << std::endl;
-   std::cout << RESET << ROJO << "5. " << RESET << SUBRAYADO << BOLD << "Lista de usuarios" << std::endl;
-   std::cout << RESET << "0. " << SUBRAYADO << BOLD << "Volver al menú principal" << RESET << std::endl
-             << std::endl;
-   std::cout << "Opción elegida: ";
+    std::cout << ROJO << "1. " << RESET << SUBRAYADO << BOLD << "Agregar usuario" << std::endl;
+    std::cout << RESET << ROJO << "2. " << RESET << SUBRAYADO << BOLD << "Modificar usuario" << std::endl;
+    std::cout << RESET << ROJO << "3. " << RESET << SUBRAYADO << BOLD << "Editar mi perfil" << std::endl;
+    std::cout << RESET << ROJO << "4. " << RESET << SUBRAYADO << BOLD << "Eliminar usuario" << std::endl;
+    std::cout << RESET << ROJO << "5. " << RESET << SUBRAYADO << BOLD << "Modificar contraseña root" << std::endl;
+    std::cout << RESET << ROJO << "6. " << RESET << SUBRAYADO << BOLD << "Lista de usuarios" << std::endl;
+    std::cout << RESET << ROJO << "7. " << RESET << SUBRAYADO << BOLD << "Recuperar usuario borrado" << std::endl;
+    std::cout << RESET << "0. " << SUBRAYADO << BOLD << "Volver al menú principal" << RESET << std::endl
+        << std::endl;
+    std::cout << "Opción elegida: ";
 
-   std::string op;
-   std::getline(std::cin, op);
-   if (op == "0")
-   {
-      return 0;
-   }
-   else if (op == "1")
-   {
-      return 1;
-   }
-   else if (op == "2")
-   {
-      return 2;
-   }
-   else if (op == "3")
-   {
-      return 3;
-   }
-   else if (op == "4")
-   {
-      return 4;
-   }
-   else if (op == "5")
-   {
-      return 5;
-   }
-   else
-   {
-      return -1;
-   }
+    std::string opcion;
+    std::getline(std::cin, opcion);
+
+    try {
+        int numero = std::stoi(opcion);
+        if (numero>= 0 && numero < 8) {
+            return numero;
+        }
+        else {
+            return -1;
+        }
+
+    }
+    catch (const std::invalid_argument& e) {
+        return -1; 
+    }
+
+   
 }
 
 int UiConsole::mostrarMenuEstadisticas()
@@ -692,12 +693,35 @@ Usuario UiConsole::agregarUsuario(std::string nombreUsuario, Manager &manager)
    std::string rol;
    std::string telefono;
    std::string direccion;
-   std::string email;
+   std::string email;     
 
+   //NOMBRE:
    std::cout << "Nombre completo: ";
    std::getline(std::cin, nombre);
+   //Validación del nombre completo: 
+   bool nombreEsCorrecto = Usuario::validarNombreCompleto(nombre); 
+
+   while (!nombreEsCorrecto) {
+       std::cout << ROJO << "El valor ingresado no es un nombre correcto. Formato correcto: 'Nombre Apellido'. Ingreselo nuevamente." << RESET << std::endl; 
+           std::cout << "Nombre completo:"; 
+       std::getline(std::cin, nombre);
+       nombreEsCorrecto = Usuario::validarNombreCompleto(nombre);
+   }
+
+   //CONTRASEÑA: 
    std::cout << "Contraseña: ";
    std::getline(std::cin, pass);
+   //Validación de la contraseña: 
+   bool contraseniaCorrecta = Usuario::validarContrasenia(pass); 
+
+   while (!contraseniaCorrecta) {
+       std::cout << ROJO << "La contraseña debe tener como mínimo 4 caracteres y máximo 20. Ingresela nuevamente." << RESET << std::endl;
+       std::cout << "Contraseña: "; 
+       std::getline(std::cin, pass);
+       contraseniaCorrecta = Usuario::validarContrasenia(pass); 
+   }
+   
+   //ROL: 
    std::cout << BOLD << R"(
  Roles
  a: administrador
@@ -719,42 +743,61 @@ Usuario UiConsole::agregarUsuario(std::string nombreUsuario, Manager &manager)
       rolValido = Usuario::validarRol(rol);
    }
 
+   //TELEFONO: 
    std::cout << "Telefono: ";
    std::getline(std::cin, telefono);
-   bool esNumero = false;
 
-   while (!esNumero)
+   // Validación formato del numero de telefono: 
+
+   bool telefonoValido = Usuario::validarTelefono(telefono);  
+   while (!telefonoValido)
    {
-      try
-      {
-         int num = std::stoi(telefono);
-         esNumero = true;
+       std::cout << ROJO << "El valor ingresado no es un número. Ingreselo nuevamente." << RESET << std::endl;
+       std::cout << "Telefono: ";
+       std::getline(std::cin, telefono);
+       telefonoValido = Usuario::validarTelefono(telefono);
       }
-      catch (const std::invalid_argument error)
-      {
-         std::cout << ROJO << "El valor ingresado no es un número. Ingreselo nuevamente." << RESET << std::endl;
-         std::cout << "Telefono: ";
-         std::getline(std::cin, telefono);
-      }
-   }
 
-   int telefonoExiste = manager.buscarTelefono(telefono, true);
-   // Validacion del telefono:
-   while (telefonoExiste >= 0)
+   //Validación de la existencia del numero de telefono en la base de datos : 
+   int telefonoYaRegistrado = manager.buscarTelefono(telefono, true);
+
+   while (telefonoYaRegistrado >= 0)
    {
       std::cout << ROJO << "El telefono ingresado " << VERDE << "'" << telefono << "'" << ROJO
                 << " ya está registrado para otro usuario. Ingrese otro telefono." << RESET << std::endl;
       std::cout << "Telefono: ";
       std::getline(std::cin, telefono);
-      telefonoExiste = manager.buscarEmail(telefono, true);
+      telefonoYaRegistrado = manager.buscarTelefono(telefono, true);
    }
 
    std::cout << "Direccion: ";
    std::getline(std::cin, direccion);
+
+   bool direccionValida = Usuario::validarDireccion(direccion);
+
+   while (!direccionValida) {
+       std::cout << ROJO << "La dirección ingresada es demasiado corta. Ingrese un valor válido" << RESET << std::endl; 
+       std::cout << "Direccion: ";
+       std::getline(std::cin, direccion);
+       direccionValida = Usuario::validarDireccion(direccion); 
+   }
+
+   //EMAIL:
    std::cout << "Email: ";
    std::getline(std::cin, email);
+
+   //Validacion del formato del email: 
+   bool formatoCorrectoEmail = Usuario::validarEmail(email); 
+
+   while (!formatoCorrectoEmail) {
+       std::cout << ROJO << "El valor ingresado no tiene un formato correcto (ejemplo: mimail@mailito.com). Ingrese nuevamente un valor." << RESET << std::endl; 
+       std::cout << "Email: ";
+       std::getline(std::cin, email);
+       formatoCorrectoEmail = Usuario::validarEmail(email); 
+   }
    int mailExiste = manager.buscarEmail(email, true);
-   // Validación del email:
+
+   // Validación de la existencia del email en la base de datos:
    while (mailExiste >= 0)
    {
       std::cout << ROJO << "El mail ingresado " << VERDE << "'" << email << "'" << ROJO
@@ -792,6 +835,53 @@ void UiConsole::listarUsuario(std::string nombreUsuario, char rolUsuario, std::s
    std::cout << "| " << std::left << std::setw(35) << email;
    std::cout << "| " << std::left << std::setw(20) << telefono << "|" << std::endl;
 }
+
+
+int UiConsole::menuEditarMiPerfil(Usuario& usuarioLoggeado) {
+    this->limpiarConsola();
+    std::cout << BOLD << "Usuario: " << VERDE << _nombreUsuario << RESET;
+    std::cout << MENU_EDITAR_USUARIO << std::endl;
+
+
+    std::cout << VERDE << "Nombre: " << RESET << usuarioLoggeado.getNombre() << std::endl;
+    std::cout << VERDE << "Email: " << RESET << usuarioLoggeado.getEmail() << std::endl;
+    std::cout << VERDE << "Direccion: " << RESET << usuarioLoggeado.getDireccion() << std::endl;
+    std::cout << VERDE << "Telefono: " << RESET << usuarioLoggeado.getTelefono() << std::endl;
+    std::cout << VERDE << "Contraseña: " << RESET << usuarioLoggeado.getPassword() << std::endl << std::endl;
+
+
+    std::cout << ROJO << "1. " << RESET << SUBRAYADO << BOLD << "Modificar nombre" << std::endl;
+    std::cout << RESET << ROJO << "2. " << RESET << SUBRAYADO << BOLD << "Modificar email" << std::endl;
+    std::cout << RESET << ROJO << "3. " << RESET << SUBRAYADO << BOLD << "Modificar dirección" << std::endl;
+    std::cout << RESET << ROJO << "4. " << RESET << SUBRAYADO << BOLD << "Modificar Telefono" << std::endl;
+    std::cout << RESET << ROJO << "5. " << RESET << SUBRAYADO << BOLD << "Modificar contraseña" << std::endl;
+    std::cout << RESET << "0. " << SUBRAYADO << BOLD << "Volver al menú anterior" << RESET << std::endl
+        << std::endl;
+    std::cout << "Opción elegida: ";
+
+
+    std::string opcion;
+    std::getline(std::cin, opcion);
+
+    try {
+        int numero = std::stoi(opcion);
+        if (numero >= 0 && numero < 6) {
+            return numero;
+        }
+        else {
+            return -1;
+        }
+
+    }
+    catch (const std::invalid_argument& e) {
+        return -1;
+    }
+
+
+
+
+}
+
 
 int UiConsole::mostrarMenuModificacionUsuario()
 {

@@ -54,12 +54,13 @@ bool Menu::menuLogin(Manager &manager, UiConsole &ui)
 {
    std::string user, pass;
    int intentos = 5;
-   bool usuarioYPassValidos, credencialesCorrectas;
+   bool formatoUsuarioValido, formatoContraseniaValida, credencialesCorrectas;
    while (intentos > 0)
    {
       ui.mostrarMenuLogin(user, pass, intentos);
-      usuarioYPassValidos = Usuario::validarUsuarioYPass(user, pass);
-      if (usuarioYPassValidos)
+      formatoUsuarioValido = Usuario::validarUsuario(user);
+      formatoContraseniaValida = Usuario::validarContrasenia(pass);      
+      if (formatoUsuarioValido && formatoContraseniaValida)
       {
          credencialesCorrectas = manager.login(user, pass);
          if (credencialesCorrectas)
@@ -962,10 +963,14 @@ void Menu::menuVentas(Manager &manager, UiConsole &ui)
 
 void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
 {
+    ui.limpiarConsola();
+    //Cargamos en memoria un cache con los usuarios
+    manager.actualizarCacheUsuarios();
+
    auto agregarUsuario = [&]() -> void
    {
       ui.limpiarConsola();
-      if (!manager.getPrivilegios())
+      if (!manager.esAdmin())
       {
          std::cout << UiConsole::ROJO << "No tiene privilegios para realizar esta acci�n." << UiConsole::RESET
                    << std::endl;
@@ -976,25 +981,47 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
       std::string nombreUsuario;
       do
       {
-         std::cout << "Ingrese el nombre del usuario: ";
+         std::cout << "Ingrese el nombre del usuario o 'Q' para salir de este menu: ";
          std::getline(std::cin, nombreUsuario);
+
+         //Validar formato de usuario: 
+
+         if (nombreUsuario.length() == 1 && (nombreUsuario == "q" || nombreUsuario == "Q")) {
+             return;
+         }
+         
+         bool formatoUsuarioValido = Usuario::validarUsuario(nombreUsuario); 
+
+         if (!formatoUsuarioValido) {
+             std::cout << UiConsole::ROJO << "El nombre de usuario debe tener al menos 4 caracteres. Ingreselo nuevamente." << UiConsole::RESET
+                 << std::endl;
+             continue; 
+         }
+        
          if (manager.buscarUsuario(nombreUsuario, true) >= 0)
          {
-            std::cout << UiConsole::ROJO << "El nombre de usuario " << UiConsole::VERDE << "'" << nombreUsuario << "'"
-                      << UiConsole::ROJO << " ya existe. Ingrese otro." << UiConsole::RESET << std::endl
-                      << std::endl;
-            continue;
+             std::cout << UiConsole::ROJO << "El nombre de usuario " << UiConsole::VERDE << "'" << nombreUsuario << "'"
+                 << UiConsole::ROJO << " ya existe. Ingrese otro." << UiConsole::RESET << std::endl
+                 << std::endl;
+             continue;
          }
 
-         if (nombreUsuario.length() < 4)
-         {
-            std::cout << UiConsole::ROJO << "El nombre de usuario debe tener al menos 4 caracteres" << UiConsole::RESET
-                      << std::endl
-                      << std::endl;
-         }
          else
          {
             Usuario usuario = ui.agregarUsuario(nombreUsuario, manager);
+            std::cout << "¿Está seguro que desea agregar este usuario? (Y/N)" << std::endl; 
+
+            std::string opcion; 
+            std::getline(std::cin, opcion);
+
+            while (opcion != "n" && opcion != "N" && opcion != "y" && opcion != "Y") {
+                std::cout << UiConsole::ROJO << "Opción incorrecta."<<UiConsole::RESET <<" ¿Está seguro que desea agregar este usuario ? (Y/N) " << std::endl; 
+                std::getline(std::cin, opcion); 
+            }
+
+            if (opcion == "n" || opcion == "N") return;
+
+
             bool agregadoCorrectamente = manager.agregarUsuario(usuario);
             if (agregadoCorrectamente)
             {
@@ -1012,11 +1039,10 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
       ui.pausa();
       return;
    };
-
    auto modificarUsuario = [&]() -> void
    {
       ui.limpiarConsola();
-      if (!manager.getPrivilegios())
+      if (!manager.esAdmin())
       {
          std::cout << UiConsole::ROJO << "No tiene privilegios para modificar un usuario." << UiConsole::RESET
                    << std::endl;
@@ -1072,7 +1098,7 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
    {
       ui.limpiarConsola();
 
-      if (!manager.getPrivilegios())
+      if (!manager.esAdmin())
       {
          std::cout << UiConsole::ROJO << "No tiene privilegios para eliminar un usuario." << UiConsole::RESET
                    << std::endl;
@@ -1084,48 +1110,74 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
       bool eliminandoUsuario = true;
       do
       {
-         std::cout << "Ingrese el nombre del usuario a eliminar: ";
+         std::cout << "Ingrese el nombre del usuario a eliminar o 'Q' para salir de este menu: ";
          std::getline(std::cin, nombreUsuario);
+
+         if (nombreUsuario.length() == 1 && (nombreUsuario == "q" || nombreUsuario == "Q")) {
+             return;
+         }
+
+         if (nombreUsuario == "root") {
+             std::cout << UiConsole::ROJO << "El usuario " << UiConsole::VERDE << "'root'" << UiConsole::ROJO << " no puede ser eliminado."  << UiConsole::RESET<< std::endl;
+             ui.pausa();
+             return; 
+         }
 
          int posicionUsuario = manager.buscarUsuario(nombreUsuario, true);
 
          if (posicionUsuario < 0)
          {
             std::cout << UiConsole::ROJO << "El usuario" << UiConsole::VERDE << "'" << nombreUsuario << "'"
-                      << UiConsole::ROJO << " no existe. Ingrese nuevamente un usuario." << UiConsole::RESET
+                      << UiConsole::ROJO << " no existe. Ingrese nuevamente un usuario o 'Q' para salir de este menu." << UiConsole::RESET
                       << std::endl;
             continue;
          }
          else
          {
             Usuario usuario = manager.leerUsuario(posicionUsuario);
-            usuario.setEstadoUsuario(false);
+            bool usuarioActivo = usuario.getEstadoUsuario();
+            
+            if (!usuarioActivo) {
+                std::cout << "El usuario" << UiConsole::VERDE << "'" << nombreUsuario << "'" << UiConsole::RESET << "ya fue borrado previamente." << std::endl;
+                ui.pausa();
+                return;
+            }
 
-            std::cout << UiConsole::ROJO << "�Est� seguro que desea eliminar el usuario " << UiConsole::BOLD
+            
+
+            std::cout << UiConsole::ROJO << "¿Está seguro que desea eliminar el usuario " << UiConsole::BOLD
                       << UiConsole::VERDE << "'" << nombreUsuario << "'" << UiConsole::ROJO << "?" << UiConsole::RESET
                       << "(Y/N)" << std::endl;
 
             bool opcionCorrecta = false;
-            char option;
-            std::cin >> option;
+            std::string opcion;
+            std::getline(std::cin, opcion);
 
             while (!opcionCorrecta)
-            {
-               switch (option)
+            {                 
+               switch (opcion[0])
                {
                case 'y':
                case 'Y':
-               {
-                  std::cout << "Se eliminara el usuario.";
+               {                
+                  usuario.setEstadoUsuario(false);
                   opcionCorrecta = true;
-                  manager.reescribirUsuario(usuario, posicionUsuario);
+                  bool guardadoCorrectamente = manager.reescribirUsuario(usuario, posicionUsuario);
+
+                  if (guardadoCorrectamente) {
+                      std::cout << "El usuario fue eliminado correctamente." << std::endl;
                   manager.actualizarCacheUsuarios();
+                  ui.pausa(); 
+                  }
+                  else {
+                      std::cout << UiConsole::ROJO << "El usuario no pudo ser eliminado. Vuelva a intentarlo." << UiConsole::RESET<<std::endl; 
+                      ui.pausa();
+                  }
                   break;
                }
                case 'n':
                case 'N':
-               {
-                  std::cout << "No se eliminara el usuario.";
+               {                  
                   opcionCorrecta = true;
                   break;
                }
@@ -1136,7 +1188,7 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
                          << UiConsole::ROJO
                          << "La opcion seleccionada es incorrecta. Ingrese 'Y' para eliminar o 'N' para cancelar."
                          << UiConsole::RESET << std::endl;
-                     std::cin >> option;
+                     std::cin >> opcion;
                   }
                   break;
                   }
@@ -1145,30 +1197,41 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
          }
          eliminandoUsuario = false;
       } while (eliminandoUsuario);
-
-      ui.limpiarConsola();
-      ui.pausa();
+           
       return;
    };
    auto modificarContraseniaRoot = [&]() -> void
    {
-      if (!manager.getPrivilegios())
-      {
-         std::cout << UiConsole::ROJO << "No tiene privilegios para modificar la contrase�a root." << UiConsole::RESET
-                   << std::endl;
-         ui.pausa();
-         return;
+      ui.limpiarConsola(); 
+      Usuario usuarioRoot = manager.getUsuarioLoggeado();
+     
+      if (!(usuarioRoot.getNombreUsuario() == "root")) {
+          std::cout << UiConsole::ROJO << "Solamente el usuario " << UiConsole::VERDE <<   "'root'" << UiConsole::ROJO << " puede modificar la contraseña root." << UiConsole::RESET << std::endl; 
+          ui.pausa();
+          return;
       }
-
-      // manager.buscarUsuario("root");
+         
+      bool contraseniaModificada = usuarioRoot.modificarContrasenia();
+             
+      if (contraseniaModificada) {
+        bool usuarioActualizadoCorrectamente = manager.reescribirUsuario(usuarioRoot, 0);
+      
+        if (usuarioActualizadoCorrectamente) {
+              std::cout << "La contraseña fue actualizada correctamente."<<  std::endl;
+              ui.pausa(); 
+        }
+      } else {        
+              std::cout << UiConsole::ROJO << "La contraseña no pudo ser actualizada. Vuelva a intentarlo." << std::endl;
+              ui.pausa();               
+          }      
+      
    };
-
    auto listarUsuarios = [&]() -> void
    {
       ui.limpiarConsola();
 
       Usuario *vectorUsuarios = manager.getCacheListadoUsuarios();
-      if (!manager.getPrivilegios())
+      if (!manager.esAdmin())
       {
          std::cout << UiConsole::ROJO << "No tiene privilegios para ver el listado de usuarios." << UiConsole::RESET
                    << std::endl;
@@ -1191,7 +1254,7 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
 +---------------------+---------------------+------------------------------------+---------------------+)"
                 << std::endl;
 
-      for (int i = 0; i < cantidad; i++)
+      for (int i = 1; i < cantidad; i++)
       {
          if (vectorUsuarios[i].getEstadoUsuario())
          {
@@ -1205,12 +1268,214 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
       ui.pausa();
       return;
    };
+   auto recuperarUsuario = [&]() {
+       ui.limpiarConsola(); 
 
-   int op;
+       if (!manager.esAdmin())
+       {
+           std::cout << UiConsole::ROJO << "No tiene privilegios para eliminar un usuario." << UiConsole::RESET
+               << std::endl;
+           ui.pausa();
+           return;
+       }
+
+       std::string nombreUsuario;
+       bool eliminandoUsuario = true;
+       do
+       {
+           std::cout << "Ingrese el nombre del usuario a recuperar o 'Q' para salir de este menu: ";
+           std::getline(std::cin, nombreUsuario);
+
+           if (nombreUsuario.length() == 1 && (nombreUsuario == "q" || nombreUsuario == "Q")) {
+               return;
+           }
+
+           if (nombreUsuario == "root") {
+               std::cout << UiConsole::ROJO << "El usuario " << UiConsole::VERDE << "'root'" << UiConsole::ROJO << " no puede ser recuperado ya que está activo." << UiConsole::RESET << std::endl;
+               ui.pausa();
+               return;
+           }
+
+           int posicionUsuario = manager.buscarUsuario(nombreUsuario, true);
+
+           if (posicionUsuario < 0)
+           {
+               std::cout << UiConsole::ROJO << "El usuario" << UiConsole::VERDE << "'" << nombreUsuario << "'"
+                   << UiConsole::ROJO << " no existe. Ingrese nuevamente un usuario o 'Q' para salir de este menu." << UiConsole::RESET
+                   << std::endl;
+               continue;
+           }
+           else
+           {
+               Usuario usuario = manager.leerUsuario(posicionUsuario);
+               bool usuarioActivo = usuario.getEstadoUsuario();
+
+               if (usuarioActivo) {
+                   std::cout << "El usuario" << UiConsole::VERDE << "'" << nombreUsuario << "'" << UiConsole::RESET << "se encuentra activo." << std::endl;
+                   ui.pausa();
+                   return;
+               }
+
+
+               bool opcionCorrecta = false;
+               std::string opcion;
+
+               while (!opcionCorrecta)
+               {
+                   std::cout << UiConsole::ROJO << "¿Está seguro que desea recuperar el usuario " << UiConsole::BOLD
+                       << UiConsole::VERDE << "'" << nombreUsuario << "'" << UiConsole::ROJO << "?" << UiConsole::RESET
+                       << "(Y/N)" << std::endl;
+
+                   
+                   std::getline(std::cin, opcion);
+
+                   switch (opcion[0])
+                   {
+                   case 'y':
+                   case 'Y':
+                   {
+                    usuario.setEstadoUsuario(true);
+                       opcionCorrecta = true;
+
+                       bool guardadoCorrectamente = manager.reescribirUsuario(usuario, posicionUsuario);
+
+                       if (guardadoCorrectamente) {
+                           std::cout << "El usuario fue recuperado correctamente." << std::endl;
+                           manager.actualizarCacheUsuarios();
+                           ui.pausa();
+                       }
+                       else {
+                           std::cout << UiConsole::ROJO << "El usuario no pudo ser recuperado. Vuelva a intentarlo." << UiConsole::RESET << std::endl;
+                           ui.pausa();
+                       }                   
+                   
+                       break;
+                   }
+                   case 'n':
+                   case 'N':
+                   {
+                       opcionCorrecta = true;
+                       break;
+                   }                  
+                   default:
+                   {
+                       std::cout
+                           << UiConsole::ROJO
+                           << "La opción seleccionada es incorrecta."
+                           << UiConsole::RESET << std::endl;                       
+                    break;
+                   }
+                   
+                   }
+               }
+           }
+           eliminandoUsuario = false;
+       } while (eliminandoUsuario);
+
+      return;
+
+       };
+   auto editarMiPerfil = [&]() -> void {
+       Usuario usuarioLoggeado = manager.getUsuarioLoggeado(); 
+       int posicionUsuario = manager.buscarUsuario(usuarioLoggeado.getNombreUsuario(), true);
+
+       int opcionAModificar = ui.menuEditarMiPerfil(usuarioLoggeado);
+
+
+       switch (opcionAModificar) {
+
+       case 1:{
+           //nombre
+           ui.limpiarConsola(); 
+           bool nombreActualizadoCorrectamente = usuarioLoggeado.actualizarNombre(); 
+
+           if (!nombreActualizadoCorrectamente) {
+               std::cout << UiConsole::ROJO << "El nombre no pudo ser actualizado correctamente. Intentelo nuevamente." <<UiConsole::RESET << std::endl; 
+               ui.pausa(); 
+           }
+           else {
+               bool usuarioGuardadoExitosamente = manager.reescribirUsuario(usuarioLoggeado, posicionUsuario);
+               if (usuarioGuardadoExitosamente) {
+                   std::cout << "El nombre fue modificado exitosamente." << std::endl;
+                   manager.actualizarCacheUsuarios();
+                   manager.setUsarioLoggeado(usuarioLoggeado);
+                   ui.pausa();
+               }
+               else {
+                   std::cout << UiConsole::ROJO<< "Ocurrió un error al guardar los cambios. Intentelo nuevamente." << UiConsole::RESET << std::endl;
+                   ui.pausa();
+               }
+           }
+           break;
+       }
+       case 2: {
+           //email
+           ui.limpiarConsola();
+           bool mailActualizadoCorrectamente = usuarioLoggeado.actualizarEmail(manager);
+
+           if (!mailActualizadoCorrectamente) {
+               std::cout << UiConsole::ROJO << "El mail no pudo ser actualizado correctamente. Intentelo nuevamente." << UiConsole::RESET << std::endl; 
+               ui.pausa(); 
+           }
+           else {
+               bool usuarioGuardadoExitosamente = manager.reescribirUsuario(usuarioLoggeado, posicionUsuario); 
+               if (usuarioGuardadoExitosamente) {
+                   std::cout << "El email fue modificado exitosamente." << std::endl; 
+                   manager.actualizarCacheUsuarios();
+                   manager.setUsarioLoggeado(usuarioLoggeado); 
+                   ui.pausa(); 
+               }
+               else {
+                   std::cout << UiConsole::ROJO << "Ocurrio un error el guardo los cambios. Intentelo nuevamente." << UiConsole::RESET <<std::endl; 
+               }
+           }
+         
+           break;
+       }
+       case 3:
+
+           //direccion
+           break;
+       case 4:
+
+           //telefono
+           break;
+       case 5: {
+           bool contraseniaModificada = usuarioLoggeado.modificarContrasenia();
+           if (!contraseniaModificada) {
+               std::cout << UiConsole::ROJO << "La contraseña no pudo ser modificada, intentelo nuevamente." << std::endl;
+               ui.pausa();
+               break;
+           }
+           else {
+               bool usuarioGuardadoExitosamente = manager.reescribirUsuario(usuarioLoggeado, posicionUsuario);
+               if (usuarioGuardadoExitosamente) {
+                   std::cout << "La contraseña fue modificada exitosamente" << std::endl;
+                   manager.actualizarCacheUsuarios();
+                   manager.setUsarioLoggeado(usuarioLoggeado); 
+                   ui.pausa();
+               }
+               else {
+                   std::cout << UiConsole::ROJO<< "Ocurrió un error al guardar los cambios. Intentelo nuevamente."<< UiConsole::RESET << std::endl;
+                   ui.pausa();
+               }
+           }
+           break;
+       }
+       case 0:
+           break;
+       default: 
+           break;
+       }
+
+      
+   };
+
+   int opcion;
    do
    {
-      op = ui.mostrarMenuUsuarios();
-      switch (op)
+      opcion = ui.mostrarMenuUsuarios();
+      switch (opcion)
       {
       case 1:
          agregarUsuario();
@@ -1219,14 +1484,20 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
          modificarUsuario();
          break;
       case 3:
-         eliminarUsuario();
+          editarMiPerfil();
          break;
       case 4:
-         modificarContraseniaRoot();
+         eliminarUsuario();
          break;
       case 5:
-         listarUsuarios();
+         modificarContraseniaRoot();
          break;
+      case 6: 
+         listarUsuarios();
+          break;
+      case 7:
+          recuperarUsuario();
+          break;
       case 0:
          break;
       default:
@@ -1234,7 +1505,8 @@ void Menu::menuUsuarios(Manager &manager, UiConsole &ui)
          break;
       }
 
-   } while (op);
+
+   } while (opcion);
 }
 
 void Menu::menuEstadisticas(Manager &manager, UiConsole &ui)

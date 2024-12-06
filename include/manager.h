@@ -35,47 +35,47 @@
 
 class Manager {
 
-  public:
-   Manager();
+public:
+	Manager();
 	~Manager();
-   // Funcionalidades Usuario
-   bool login(std::string user, std::string pass);
+	// Funcionalidades Usuario
+	bool login(std::string user, std::string pass);
 	bool agregarUsuario(Usuario usuario);
-	Usuario* listaUsuarios();
+	Usuario* getListaUsuarios();
 	int cantidadUsuarios();
 	std::string getNombreUsuario();
-  int buscarUsuario(std::string nombreUsuario);
+	int buscarUsuario(std::string nombreUsuario);
 	int buscarUsuario(std::string nombreUsuario, bool buscarEnCache);
 	Usuario leerUsuario(int posicion);
-	bool reescribirUsuario(Usuario usuario, int posicion); 
+	bool reescribirUsuario(Usuario usuario, int posicion);
 	int buscarEmail(std::string email, bool buscarEnCache);
 	int buscarTelefono(std::string telefono, bool buscarEnCache);
-	bool getPrivilegios();
 	void actualizarCacheUsuarios();
 	int buscar(std::string busqueda, int tipoDeBusqueda);
-	Usuario* getCacheListadoUsuarios(); 
-  bool esAdmin();
-   bool esComprador();
-   bool esVendedor();
+	Usuario* getCacheListadoUsuarios();
+	bool esAdmin();
+	bool esComprador();
+	bool esVendedor();
+	void setUsarioLoggeado(Usuario usuario);
 
-  //funcionalidades insumos
-   int buscarInsumo(std::string codigo);
-   int agregarInsumo(Recurso insumo);
-   bool borrarInsumo(int pos);
-   bool estaBorrado(int pos);
-   bool modificarInsumo(Recurso insumo, int pos);
-   bool modificarStockInsumo(int stock, int pos);
+	//funcionalidades insumos
+	int buscarInsumo(std::string codigo);
+	int agregarInsumo(Recurso insumo);
+	bool borrarInsumo(int pos);
+	bool estaBorrado(int pos);
+	bool modificarInsumo(Recurso insumo, int pos);
+	bool modificarStockInsumo(int stock, int pos);
 
-   Recurso getRecurso(int pos);
-   bool listaRecursos(int pos,int cantidad,bool isProducto,bool borrado,Recurso*& vector,int& vectorSize);
-   //funcionalidades productos
-   int buscarProducto(std::string codigo);
-   int agregarProducto(Recurso producto);
-   bool borrarProducto(int pos);
-   bool modificarStockRecurso(int stock, int pos);
-   bool getComposicionProducto(int pos,Recurso*& vector,int& composicionSize,std::string codigo);
-   bool setComposicionProducto(std::string idProducto, std::string idInsumo, int cantidad);
- 
+	Recurso getRecurso(int pos);
+	bool listaRecursos(int pos, int cantidad, bool isProducto, bool borrado, Recurso*& vector, int& vectorSize);
+	//funcionalidades productos
+	int buscarProducto(std::string codigo);
+	int agregarProducto(Recurso producto);
+	bool borrarProducto(int pos);
+	bool modificarStockRecurso(int stock, int pos);
+	bool getComposicionProducto(int pos, Recurso*& vector, int& composicionSize, std::string codigo);
+	bool setComposicionProducto(std::string idProducto, std::string idInsumo, int cantidad);
+	Usuario getUsuarioLoggeado();
 
 private:
 	ArchivoCliente archivoCliente;
@@ -91,8 +91,7 @@ private:
 	ArchivoProveedor archivoProveedor;
 	ArchivoRecurso archivoRecurso;
 	ArchivoUsuario archivoUsuario;
-	char _rolUsuario;
-	bool _tienePrivilegios;
+	char _rolUsuario;	
 	std::string _nombreUsuario;
 	Usuario* _cacheListadoUsuarios;
 	Usuario _usuarioLoggeado; 

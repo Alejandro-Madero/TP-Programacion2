@@ -15,14 +15,16 @@ class Usuario : public Persona {
    void setRol(char rol);
    std::string getNombreUsuario();
    void setNombreUsuario(std::string nombreUsuario);
-   static bool validarUsuarioYPass(std::string nombreUsuario, std::string pass);
-   static bool validarRol(std::string rol); 
+   static bool validarUsuario(std::string usuario);
+   static bool validarContrasenia(std::string contrasenia);   
+   static bool validarRol(std::string rol);   
+   bool modificarContrasenia(); 
    bool getEstadoUsuario();
    void setEstadoUsuario(bool estado); 
 
   private:
    char _rol; // a = administrador, v = vendedor, u = usuario, c = comprador
-   char _password[20];
-   char _nombreUsuario[20];  
+   char _password[21];
+   char _nombreUsuario[21];  
    bool _usuarioActivo; 
 };

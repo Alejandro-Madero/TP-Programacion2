@@ -20,7 +20,13 @@ class Persona{
    void setDireccion(std::string direccion);
    std::string getEmail();
    void setEmail(std::string email);
-
+   static bool validarNombreCompleto(std::string nombreCompleto);
+   static bool validarEmail(std::string email);
+   static bool validarDireccion(std::string direccion);
+   static bool validarTelefono(std::string telefono);
+   bool actualizarNombre();
+   bool actualizarEmail(Manager& manager);
+   bool actualizarDireccion(); 
 
   protected:
    int _id;
