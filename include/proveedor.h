@@ -5,7 +5,7 @@
 class Proveedor : public Persona {
   public:
    Proveedor();
-   Proveedor(char condicionPago, float totalCompras, int id, int telefono, char tipoFJ, std::string nombre,
+   Proveedor(char condicionPago, float totalCompras, int id, std::string telefono, char tipoFJ, std::string nombre,
              std::string direccion, std::string email);
 
    char getCondicionPago();

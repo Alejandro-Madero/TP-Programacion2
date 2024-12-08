@@ -32,7 +32,6 @@
 #include "manager.h"
 
 
-
 class Manager {
 
 public:

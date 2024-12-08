@@ -34,7 +34,7 @@ Manager::Manager() {
       this->archivoProveedor.Crear();
       this->archivoRecurso.Crear();
       this->archivoUsuario.Crear();
-      this->archivoUsuario.Guardar(Usuario('a',"pass","root",Fecha(1,1,2000),0,0,'F',"root","root","root"));
+      this->archivoUsuario.Guardar(Usuario('a',"pass","root",Fecha(1,1,2000),0,"0", 'F', "root", "root", "root"));
    }
 }
 
@@ -147,7 +147,7 @@ int Manager::buscar(std::string busqueda, int tipoDeBusqueda) {
 			break;
 		}
 		case 3: {
-			if (this->_cacheListadoUsuarios[i].getTelefono() == std::stoi(busqueda)) {
+			if (this->_cacheListadoUsuarios[i].getTelefono() == busqueda) {
 				return i;
 			}
 			break;

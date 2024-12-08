@@ -5,8 +5,7 @@
 #include <regex>
 
 Persona::Persona() {
-   this->_id = 0;
-   this->_telefono = 0;
+   this->_id = 0;  
    this->tipoFJ = ' ';
    strcpy(this->_nombre, " ");
    strcpy(this->_direccion, " ");
@@ -15,10 +14,10 @@ Persona::Persona() {
    this->_activo = true;
 }
 
-Persona::Persona(int id, int telefono,
+Persona::Persona(int id, std::string telefono,
                  char tipoFJ, std::string nombre, std::string direccion, std::string email) {
-   this->_id = id;
-   this->_telefono = telefono;
+   this->_id = id;  
+   this->setTelefono(telefono);
    this->tipoFJ = tipoFJ;
    strcpy(this->_nombre, nombre.c_str());
    strcpy(this->_direccion, direccion.c_str());
@@ -74,10 +73,13 @@ void Persona::setEmail(std::string email) {
    strcpy(this->_email, email.c_str());
 }
 
-int Persona::getTelefono() {
+std::string Persona::getTelefono() {
     return this->_telefono; 
 }
 
+void Persona::setTelefono(std::string telefono) {
+    strcpy(this->_telefono, telefono.c_str());
+}
 
 bool Persona::validarNombreCompleto(std::string nombreCompleto) {
     std::regex regex("[a-zA-Z]{2,} [a-zA-Z]{2,}");
@@ -90,7 +92,7 @@ bool Persona::validarEmail(std::string email) {
 }
 
 bool Persona::validarDireccion(std::string direccion) {
-    return direccion.length() >= 4;
+    return direccion.length() >= 4 && direccion.length() < 51;
 }
 
 bool Persona::validarTelefono(std::string telefono) {
@@ -102,7 +104,7 @@ bool Persona::validarTelefono(std::string telefono) {
 bool Persona::actualizarNombre() {
     //NOMBRE:
     std::string nombre;
-    std::cout << "Ingrese el nombre o 'Q' para salir de este menú: ";
+    std::cout << "Ingrese el nombre o 'Q' para salir de este menu: ";
     std::getline(std::cin, nombre);
     //Validación del nombre completo: 
     bool nombreEsCorrecto = Persona::validarNombreCompleto(nombre);
@@ -120,8 +122,6 @@ bool Persona::actualizarNombre() {
 
     return true; 
 };
-
-
 
 bool Persona::actualizarEmail(Manager& manager) {
 
@@ -157,4 +157,74 @@ bool Persona::actualizarEmail(Manager& manager) {
 
     return true; 
 };
-void actualizarDireccion();
+
+bool Persona::actualizarDireccion() {
+    std::string direccion; 
+   
+    std::cout << "Ingrese la nueva direccion o 'Q' para salir de este menu: ";
+    std::getline(std::cin, direccion);
+
+    if (direccion == "q" || direccion == "Q") return false; 
+
+    bool direccionValida = Persona::validarDireccion(direccion);
+
+    while (!direccionValida) {
+        std::cout << UiConsole::ROJO << "La dirección debe tener minimo 4 caracteres y maximo 50. Ingrese un valor válido" <<UiConsole::RESET << std::endl;
+        std::cout << "Direccion: ";
+        std::getline(std::cin, direccion);
+        direccionValida = Usuario::validarDireccion(direccion);
+    }
+
+    this->setDireccion(direccion);
+
+    return true; 
+
+};
+
+bool Persona::actualizarTelefono(Manager& manager) {
+
+    std::string telefono;
+    bool salirDelMenu = false;
+
+    std::cout << "Ingrese el nuevo numero de telefono o 'Q' para salir de este menu: ";
+    std::getline(std::cin, telefono);
+
+    salirDelMenu = UiConsole::volverAlMenuAnterior(telefono);
+    if (salirDelMenu) return false;
+
+    // Validación formato del numero de telefono: 
+
+    bool telefonoValido = Usuario::validarTelefono(telefono);
+    while (!telefonoValido)
+    {
+        std::cout << UiConsole::ROJO << "El valor ingresado no es un número. Ingreselo nuevamente." << UiConsole::RESET << std::endl;
+        std::cout << "Telefono o 'Q' para salir: ";
+        std::getline(std::cin, telefono);
+
+        salirDelMenu = UiConsole::volverAlMenuAnterior(telefono);
+        if (salirDelMenu) return false;
+
+        telefonoValido = Usuario::validarTelefono(telefono);
+    }
+
+    //Validación de la existencia del numero de telefono en la base de datos : 
+    int telefonoYaRegistrado = manager.buscarTelefono(telefono, true);
+
+    while (telefonoYaRegistrado >= 0)
+    {
+        std::cout << UiConsole::ROJO << "El telefono ingresado " << UiConsole::VERDE << "'" << telefono << "'" << UiConsole::ROJO
+            << " ya está registrado para otro usuario. Ingrese otro telefono." << UiConsole::RESET << std::endl;
+        std::cout << "Telefono o 'Q' para salir: ";
+        std::getline(std::cin, telefono);
+
+        salirDelMenu = UiConsole::volverAlMenuAnterior(telefono);
+        if (salirDelMenu) return false;
+
+        telefonoYaRegistrado = manager.buscarTelefono(telefono, true);
+    }
+
+   
+       this->setTelefono(telefono);
+       return true; 
+}
+

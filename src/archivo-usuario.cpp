@@ -18,7 +18,7 @@ bool ArchivoUsuario::Guardar(Usuario usuario){
         return false;
     }
     bool ok = fwrite(&usuario, sizeof(usuario), 1, pArchivo);
-    if (ok) {
+    if (ok) {        
         this->aumentarRegistros();
     }
     fclose(pArchivo);
@@ -67,7 +67,7 @@ int ArchivoUsuario::Buscar(std::string busqueda, int tipoDeBusqueda){
             break;
         }
           case 3: {
-              if (usuario.getTelefono() == std::stoi(busqueda)){
+              if (usuario.getTelefono() == busqueda){
                   fclose(pArchivo);
                   return pos;
               }

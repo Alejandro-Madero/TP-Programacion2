@@ -9,15 +9,15 @@ Proveedor::Proveedor(): Persona() {  // Llamar al constructor por defecto de Per
        _totalCompras = 0.0f;
    }
 
-Proveedor::Proveedor(char condicionPago, float totalCompras, int id, int telefono,
+Proveedor::Proveedor(char condicionPago, float totalCompras, int id, std::string telefono,
              char tipoFJ, std::string nombre, std::string direccion, std::string email)
        : Persona(id, telefono, tipoFJ, nombre, direccion, email),  // Llamada al constructor de Persona
          _condicionPago(condicionPago), _totalCompras(totalCompras){
 
    this->_condicionPago = condicionPago;
    this->_totalCompras = totalCompras;
-   this->_id = id;
-   this->_telefono = telefono;
+   this->_id = id;  
+   this->setTelefono(telefono);
    this->tipoFJ = tipoFJ;
    strcpy(this->_nombre, nombre.c_str());
    strcpy(this->_direccion, direccion.c_str());

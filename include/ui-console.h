@@ -30,12 +30,13 @@ class UiConsole {
    void configurarConsola();
    void limpiarConsola();
    void opcionIncorrecta();
+   static bool volverAlMenuAnterior(std::string input);
    void pausa();
-   bool pedirNumero(int& numResult);
+   bool pedirNumero(int& numResult);   
 
    //funcionalidades del menu usuarios
    Usuario agregarUsuario(std::string nombreUsuario, Manager& manager);
-   int mostrarMenuModificacionUsuario();   
+   int mostrarMenuModificacionUsuario(Usuario& usuario);   
    Usuario agregarUsuario(std::string nombreUsuario);
    void modificarUsuario();
    void eliminarUsuario();
@@ -45,9 +46,13 @@ class UiConsole {
    void mostrarUsuarios();
    void mostrarRoles();
    void mostrarRoles(std::string& nombreUsuario);
-   void listarUsuario(std::string nombreUsuario,char tipoUsuario, std::string email, int telefono);
+   void listarUsuario(std::string nombreUsuario,char tipoUsuario, std::string email, std::string telefono);
    int menuEditarMiPerfil(Usuario& usuarioLoggeado);
    void tipoUsuario(std::string tipoUsuario);
+   void procesarActualizacionUsuario(Manager& manager, Usuario& usuario, int posicionUsuario, std::string campo);
+   void mostrarPerfil(Usuario& usuario, bool root);
+   std::string mostrarRol(char rol); 
+
 //funcionalidades insumo-producto  (le mandaba Leontief jaja)
    std::string pedirCodigo();
    Recurso agregarRecurso(std::string codigo,bool isInsumo);

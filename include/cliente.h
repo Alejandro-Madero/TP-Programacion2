@@ -7,7 +7,7 @@ class Cliente : public Persona {
   public:
    Cliente();  // Constructor por defecto
 
-   Cliente(bool prioridad, float totalVentas, int id, int telefono, char tipoFJ,
+   Cliente(bool prioridad, float totalVentas, int id, std::string telefono, char tipoFJ,
             std::string nombre, std::string direccion, std::string email);
 
    bool getPrioridad();
