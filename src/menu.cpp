@@ -1588,48 +1588,48 @@ void Menu::menuUsuarios(Manager& manager, UiConsole& ui)
 
 		}
 		};
-		auto mostrarInformacionUsuario = [&]()->void {
-			ui.limpiarConsola();
-			if (!manager.esAdmin())
-			{
-				std::cout << UiConsole::ROJO << "No tiene privilegios para realizar esta acción." << UiConsole::RESET
-					<< std::endl;
-				ui.pausa();
-				return;
-			}
-
-
-			Usuario usuarioLoggeado = manager.getUsuarioLoggeado();
-			bool usuarioLoggeadoEsRoot = usuarioLoggeado.getNombreUsuario() == "root";
-
-			std::string nombreUsuario;
-			bool usuarioExiste = false;
-			bool volverAlMenuAnterior = false;
-			int posicionUsuario = -1;
-
-			while (!usuarioExiste) {
-				std::cout << "Ingrese el nombre del usuario a buscar o 'Q' para salir de este menu: ";
-				std::getline(std::cin, nombreUsuario);
-				volverAlMenuAnterior = UiConsole::volverAlMenuAnterior(nombreUsuario);
-				if (volverAlMenuAnterior) return;
-
-				posicionUsuario = manager.buscarUsuario(nombreUsuario, true);
-
-				if (posicionUsuario < 0)
-				{
-					std::cout << UiConsole::ROJO << "El usuario" << UiConsole::VERDE << "'" << nombreUsuario << "'"
-						<< UiConsole::ROJO << " no existe. Ingrese nuevamente un usuario." << UiConsole::RESET
-						<< std::endl;
-					continue;
-				}
-				usuarioExiste = true;
-			}
-
-
-			Usuario usuarioAMostrar = manager.leerUsuario(posicionUsuario);
-			ui.mostrarPerfil(usuarioAMostrar, usuarioLoggeadoEsRoot);
+	auto mostrarInformacionUsuario = [&]()->void {
+		ui.limpiarConsola();
+		if (!manager.esAdmin())
+		{
+			std::cout << UiConsole::ROJO << "No tiene privilegios para realizar esta acción." << UiConsole::RESET
+				<< std::endl;
 			ui.pausa();
-			};
+			return;
+		}
+
+
+		Usuario usuarioLoggeado = manager.getUsuarioLoggeado();
+		bool usuarioLoggeadoEsRoot = usuarioLoggeado.getNombreUsuario() == "root";
+
+		std::string nombreUsuario;
+		bool usuarioExiste = false;
+		bool volverAlMenuAnterior = false;
+		int posicionUsuario = -1;
+
+		while (!usuarioExiste) {
+			std::cout << "Ingrese el nombre del usuario a buscar o 'Q' para salir de este menu: ";
+			std::getline(std::cin, nombreUsuario);
+			volverAlMenuAnterior = UiConsole::volverAlMenuAnterior(nombreUsuario);
+			if (volverAlMenuAnterior) return;
+
+			posicionUsuario = manager.buscarUsuario(nombreUsuario, true);
+
+			if (posicionUsuario < 0)
+			{
+				std::cout << UiConsole::ROJO << "El usuario" << UiConsole::VERDE << "'" << nombreUsuario << "'"
+					<< UiConsole::ROJO << " no existe. Ingrese nuevamente un usuario." << UiConsole::RESET
+					<< std::endl;
+				continue;
+			}
+			usuarioExiste = true;
+		}
+
+
+		Usuario usuarioAMostrar = manager.leerUsuario(posicionUsuario);
+		ui.mostrarPerfil(usuarioAMostrar, usuarioLoggeadoEsRoot);
+		ui.pausa();
+		};
 
 	int opcion;
 	do
